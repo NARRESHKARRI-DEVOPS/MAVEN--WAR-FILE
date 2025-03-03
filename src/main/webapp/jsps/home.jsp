@@ -4,12 +4,12 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>KK FUNDA Home Page</title>
+<title>NARRESH Home Page</title>
 <link href="images/kkfunda.jpg" rel="icon">
 </head>
 </head>
 <body>
-<h1 align="center">Welcome to KK FUNDA</h1>
+<h1 align="center">NARRESH</h1>
 <h1 align="center"> KK FUNDA</h1>
 <hr>
 <br>
