@@ -1,5 +1,5 @@
-node 
-{
+node{ 
+
    def mavenhome=tool name: "maven"
 	stage('git-clone')
 	{
