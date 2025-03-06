@@ -1,4 +1,4 @@
-node{ 
+node{
 
    def mavenhome=tool name: "maven"
 	stage('git-clone')
@@ -7,15 +7,15 @@ node{
 	}
 	stage('maven')
 	{
-    sh '${mavenhome}/bin/mvn clean package'
+    sh "${mavenhome}/bin/mvn clean package"
 	}
 	stage('sonar')
 	{
-	sh '${mavenhome}/bin/mvn clean install sonar:sonar'
+	sh "${mavenhome}/bin/mvn clean package  sonar:sonar"
 	}
-	stage (nexus)
+	stage ('nexus')
 	{
-	sh '${mavenhome}/bin/mvn clean deploy sonar:sonar'
+	sh "${mavenhome}/bin/mvn clean sonar:sonar deploy"
 	}
 	stage('deploy')
 	{
