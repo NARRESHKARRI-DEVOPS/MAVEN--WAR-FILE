@@ -21,7 +21,7 @@ node{
 	{
 	sh """
 	curl -u admin:hello \
-	--upload-file /var/lib/jenkins/workspace/new-pipe-1-staging/target/maven-web-application.war \
+	--upload-file /var/lib/jenkins/workspace/new-pipe-1/target/maven-web-application.war \
 	"http://13.234.111.52:8080/manager/text/deploy?path=/maven-web-apllication&update=ture"
 	"""
 	}
