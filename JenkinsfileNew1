@@ -1,13 +1,15 @@
 pipeline {
     agent any
     tools {
-        maven "maven"
+        maven "maven"  // Ensure this matches your Jenkins Maven tool name
     }
 
     stages {
         stage('Checkout Stage') {
             steps {
-                notifyBuild('STARTED')
+                script {
+                    notifyBuild('STARTED')
+                }
                 git branch: 'feature1', credentialsId: '4fed7abf-d02c-4ae8-92c2-1f56430fb590', url: 'https://github.com/NARRESHKARRI-DEVOPS/MAVEN--WAR-FILE.git'
             }
         }
@@ -32,29 +34,36 @@ pipeline {
 
         stage('Deploy App To Tomcat') {
             steps {
-                echo "Deploying WAR file using curl..."
-                
-                def warFile = "${env.WORKSPACE}/target/maven-web-application.war"
+                script {
+                    echo "Deploying WAR file using curl..."
+                    
+                    // Define WAR file path using environment variable
+                    env.WAR_FILE = "${env.WORKSPACE}/target/maven-web-application.war"
 
-                if (!fileExists(warFile)) {
-                    error "WAR file not found at ${warFile}"
+                    if (!fileExists(env.WAR_FILE)) {
+                        error "WAR file not found at ${env.WAR_FILE}"
+                    }
+
+                    sh """
+                        curl -u kkfunda:kkfunda \
+                            --upload-file ${env.WAR_FILE} \
+                            "http://3.108.194.157:8080/manager/text/deploy?path=/maven-web-application&update=true"
+                    """
                 }
-
-                sh """
-                    curl -u admin:hello \
-                        --upload-file ${warFile} \
-                        "http://13.233.139.175:8082/manager/text/deploy?path=/maven-web-application&update=true"
-                """
             }
         }
     } // Stages closing
 
     post {
         success {
-            notifyBuild(currentBuild.result)
+            script {
+                notifyBuild('SUCCESS')
+            }
         }
         failure {
-            notifyBuild(currentBuild.result)
+            script {
+                notifyBuild('FAILED')
+            }
         }
     }
 } // Pipeline closing
@@ -63,24 +72,22 @@ pipeline {
 def notifyBuild(String buildStatus = 'STARTED') {
     buildStatus = buildStatus ?: 'SUCCESS'
 
-    def colorName = 'RED'
     def colorCode = '#FF0000'
     def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
     def summary = "${subject} (${env.BUILD_URL})"
 
     if (buildStatus == 'STARTED') {
-        colorName = 'YELLOW'
-        colorCode = '#FFFF00'
+        colorCode = '#FFFF00'  // Yellow
     } else if (buildStatus == 'SUCCESS') {
-        colorName = 'GREEN'
-        colorCode = '#00FF00'
+        colorCode = '#00FF00'  // Green
     }
 
     // List of Slack channels to notify
-    def slackChannels = ['#airtel-dev', '#airtel-prod', '#airtel-qa']  // Add more channels as needed
+    def slackChannels = ['#airtel-dev', '#airtel-prod', '#airtel-qa']
 
     // Send notifications to all channels
     for (channel in slackChannels) {
         slackSend(color: colorCode, message: summary, channel: channel)
-    }
+    }
 }
+
