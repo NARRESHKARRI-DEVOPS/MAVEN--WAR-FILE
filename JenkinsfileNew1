@@ -5,8 +5,8 @@ pipeline {
     }
 
     stages {
-        stage('Checkout Stage') { 
-       notifyBuild('STARTED')
+notifyBuild('STARTED')
+stage('Checkout Stage') {
             steps {
                 git branch: 'feature1', credentialsId: '4fed7abf-d02c-4ae8-92c2-1f56430fb590', url: 'https://github.com/NARRESHKARRI-DEVOPS/MAVEN--WAR-FILE.git'
             }
