@@ -1,14 +1,15 @@
+
 pipeline {
     agent any
     tools {
-        maven "maven"  // Ensure this matches your Jenkins Maven tool name
+        maven "maven"
     }
 
     stages {
         stage('Checkout Stage') {
             steps {
                 script {
-                    notifyBuild('STARTED')
+                    sendSlackNotification('STARTED')
                 }
                 git branch: 'feature1', credentialsId: '4fed7abf-d02c-4ae8-92c2-1f56430fb590', url: 'https://github.com/NARRESHKARRI-DEVOPS/MAVEN--WAR-FILE.git'
             }
@@ -37,57 +38,45 @@ pipeline {
                 script {
                     echo "Deploying WAR file using curl..."
                     
-                    // Define WAR file path using environment variable
-                    env.WAR_FILE = "${env.WORKSPACE}/target/maven-web-application.war"
+                    // Declare variable inside script block
+                    def warFile = "${env.WORKSPACE}/target/maven-web-application.war"
 
-                    if (!fileExists(env.WAR_FILE)) {
-                        error "WAR file not found at ${env.WAR_FILE}"
+                    if (!fileExists(warFile)) {
+                        error "WAR file not found at ${warFile}"
                     }
 
                     sh """
                         curl -u kkfunda:kkfunda \
-                            --upload-file ${env.WAR_FILE} \
+                            --upload-file ${warFile} \
                             "http://3.108.194.157:8080/manager/text/deploy?path=/maven-web-application&update=true"
                     """
                 }
             }
         }
-    } // Stages closing
+    } 
 
     post {
         success {
             script {
-                notifyBuild('SUCCESS')
+                sendSlackNotification(currentBuild.result)
             }
         }
         failure {
             script {
-                notifyBuild('FAILED')
+                sendSlackNotification(currentBuild.result)
             }
         }
     }
-} // Pipeline closing
+}
 
-// Function to send Slack notifications to multiple channels
-def notifyBuild(String buildStatus = 'STARTED') {
-    buildStatus = buildStatus ?: 'SUCCESS'
+// ✅ Fixed Slack Notification - Wrapped inside script block
+void sendSlackNotification(String buildStatus) {
+    def colorCode = buildStatus == 'SUCCESS' ? '#00FF00' : '#FF0000'
+    def summary = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})"
 
-    def colorCode = '#FF0000'
-    def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
-    def summary = "${subject} (${env.BUILD_URL})"
-
-    if (buildStatus == 'STARTED') {
-        colorCode = '#FFFF00'  // Yellow
-    } else if (buildStatus == 'SUCCESS') {
-        colorCode = '#00FF00'  // Green
-    }
-
-    // List of Slack channels to notify
     def slackChannels = ['#airtel-dev', '#airtel-prod', '#airtel-qa']
-
-    // Send notifications to all channels
     for (channel in slackChannels) {
         slackSend(color: colorCode, message: summary, channel: channel)
-    }
+    }
 }
 
