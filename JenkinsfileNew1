@@ -1,5 +1,5 @@
 pipeline {
-    agent any 
+    agent any
     tools {
         maven "maven"
     }
@@ -7,7 +7,7 @@ pipeline {
     stages {
         stage('Checkout Stage') { 
             steps {
-            notifyBuild('STARTED')
+                notifyBuild('STARTED')
                 git branch: 'feature1', credentialsId: '4fed7abf-d02c-4ae8-92c2-1f56430fb590', url: 'https://github.com/NARRESHKARRI-DEVOPS/MAVEN--WAR-FILE.git'
             }
         }
@@ -40,13 +40,17 @@ pipeline {
                         // Deploy WAR file to Tomcat
                         sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@13.233.139.175:/opt/tomcat/webapps/"
                         
+                        // Permissions on the target server
+                        sh "ssh -o StrictHostKeyChecking=no ec2-user@13.233.139.175 'sudo chown -R ec2-user:ec2-user /opt/tomcat/webapps/'"
+                        sh "ssh -o StrictHostKeyChecking=no ec2-user@13.233.139.175 'sudo chmod -R 777 /opt/tomcat/webapps/'"
+
                         // Start Tomcat service
                         sh "ssh -o StrictHostKeyChecking=no ec2-user@13.233.139.175 'sudo /opt/tomcat/bin/startup.sh'"
                     }
                 }
             }
         }
-    } // Stages closing
+    }
 
     post {
         success {
@@ -60,9 +64,8 @@ pipeline {
             }
         }
     }
-} // Pipeline closing
+}
 
-// ✅ Fixed Notification Function
 void notifyBuild(String buildStatus) {
     buildStatus = buildStatus ?: 'SUCCESS'
 
@@ -77,15 +80,15 @@ void notifyBuild(String buildStatus) {
     } else if (buildStatus == 'SUCCESS') {
         colorName = 'GREEN'
         colorCode = '#00FF00'
+    }
 
-        // List of Slack channels to notify
+    // List of Slack channels to notify
     def slackChannels = ['#hello', '#veera101502', '#sla']
 
     // Send notifications to all channels
     for (channel in slackChannels) {
         slackSend(color: colorCode, message: summary, channel: channel)
     }
-}   
-
 }
+
 
