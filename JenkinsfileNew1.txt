@@ -1,0 +1,88 @@
+pipeline {
+    agent any
+    tools {
+        maven "maven3.9.9"
+    }
+
+    stages {
+        stage('Checkout Stage') {
+            steps {
+                notifyBuild('STARTED')
+                git branch: 'development', 
+                    credentialsId: '8d341570-e046-4d2c-8060-33c3d5d493f7', 
+                    url: 'https://github.com/gangavaramdevops/maven-web-app-project-kk-funda.git'
+            }
+        }
+
+        stage('Build') { 
+            steps {
+                sh "mvn clean package"
+            }
+        }
+
+        stage('SQREPORT') {
+            steps {
+                sh "mvn sonar:sonar"
+            }
+        }
+
+        stage('Deploy To Nexus') {
+            steps {
+                sh "mvn deploy"
+            }
+        }
+
+        stage('Deploy App To Tomcat') {
+            steps {
+                echo "Deploying WAR file using curl..."
+                
+                def warFile = "${env.WORKSPACE}/target/maven-web-application.war"
+
+                if (!fileExists(warFile)) {
+                    error "WAR file not found at ${warFile}"
+                }
+
+                sh """
+                    curl -u kkfunda:kkfunda \
+                        --upload-file ${warFile} \
+                        "http://3.108.194.157:8080/manager/text/deploy?path=/maven-web-application&update=true"
+                """
+            }
+        }
+    } // Stages closing
+
+    post {
+        success {
+            notifyBuild(currentBuild.result)
+        }
+        failure {
+            notifyBuild(currentBuild.result)
+        }
+    }
+} // Pipeline closing
+
+// Function to send Slack notifications to multiple channels
+def notifyBuild(String buildStatus = 'STARTED') {
+    buildStatus = buildStatus ?: 'SUCCESS'
+
+    def colorName = 'RED'
+    def colorCode = '#FF0000'
+    def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
+    def summary = "${subject} (${env.BUILD_URL})"
+
+    if (buildStatus == 'STARTED') {
+        colorName = 'YELLOW'
+        colorCode = '#FFFF00'
+    } else if (buildStatus == 'SUCCESS') {
+        colorName = 'GREEN'
+        colorCode = '#00FF00'
+    }
+
+    // List of Slack channels to notify
+    def slackChannels = ['#airtel-dev', '#airtel-prod', '#airtel-qa']  // Add more channels as needed
+
+    // Send notifications to all channels
+    for (channel in slackChannels) {
+        slackSend(color: colorCode, message: summary, channel: channel)
+    }
+}
