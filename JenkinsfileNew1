@@ -85,5 +85,7 @@ void notifyBuild(String buildStatus) {
     for (channel in slackChannels) {
         slackSend(color: colorCode, message: summary, channel: channel)
     }
-}       
+}   
+
+}
 
