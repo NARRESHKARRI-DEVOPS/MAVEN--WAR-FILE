@@ -22,11 +22,10 @@ node {
 	}
 	stage('tomcat'){
 	sh """
-	curl -u admin:hello  \
-     --upload-file ${warFile} \ 
-     "http://13.233.139.175:8082/manager/text/deploy?path=/maven-web-application&update=true"
-    """
-
+           curl -u admin:hello  \
+               --upload-file ${warFile} \
+               "http://13.233.139.175:8082/manager/text/deploy?path=/maven-web-application&update=true"
+           """
 	}
 } catch (e) {
     // If there was an exception thrown, the build failed
