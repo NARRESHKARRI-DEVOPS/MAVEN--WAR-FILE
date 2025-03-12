@@ -7,7 +7,7 @@ pipeline {
     stages {
         stage('Checkout Stage') { 
             steps {
-            notifyBuild('STARTED')
+              notifyBuild('STARTED')
                 git branch: 'feature1', credentialsId: '4fed7abf-d02c-4ae8-92c2-1f56430fb590', url: 'https://github.com/NARRESHKARRI-DEVOPS/MAVEN--WAR-FILE.git'
             }
         }
@@ -35,17 +35,13 @@ pipeline {
                 script {
                     sshagent(['plugin']) {
                         // Stop Tomcat service gracefully
-                        sh "ssh -o StrictHostKeyChecking=no ec2-user@13.233.139.175 'sudo /opt/tomcat/bin/shutdown.sh'"
-                        
-                        // Deploy WAR file to Tomcat
-                        sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@13.233.139.175:/opt/tomcat/webapps/"
+                        sh "ssh -o StrictHostKeyChecking=no ec2-user@13.232.68.239 'sudo /opt/tomcat/bin/shutdown.sh'"
 
-                        // Permissions on the target server
-                        sh "ssh -o StrictHostKeyChecking=no ec2-user@13.233.139.175 'sudo chown -R ec2-user:ec2-user /opt/tomcat/webapps/'"
-                        sh "ssh -o StrictHostKeyChecking=no ec2-user@13.233.139.175 'sudo chmod -R 777 /opt/tomcat/webapps/'"
-                        
+                        // Deploy WAR file to Tomcat
+                        sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@13.232.68.239:/opt/tomcat/webapps/"
+
                         // Start Tomcat service
-                        sh "ssh -o StrictHostKeyChecking=no ec2-user@13.233.139.175 'sudo /opt/tomcat/bin/startup.sh'"
+                        sh "ssh -o StrictHostKeyChecking=no ec2-user@13.232.68.239 'sudo /opt/tomcat/bin/startup.sh'"
                     }
                 }
             }
@@ -81,14 +77,14 @@ void notifyBuild(String buildStatus) {
     } else if (buildStatus == 'SUCCESS') {
         colorName = 'GREEN'
         colorCode = '#00FF00'
+    }
 
-        // List of Slack channels to notify
-    def slackChannels = ['#hello','#sla']
+    // List of Slack channels to notify
+    def slackChannels = ['hello', '#sla']
 
     // Send notifications to all channels
     for (channel in slackChannels) {
         slackSend(color: colorCode, message: summary, channel: channel)
-    }
-}       
-
 }
+}
+
