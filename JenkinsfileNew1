@@ -33,7 +33,7 @@ pipeline {
         stage('Deploy to Tomcat') {
             steps {
                 script {
-                   sshagent(['optionals']) {
+                   sshagent(['new-cred']) {
                     // Stop Tomcat service gracefully
                         sh "ssh -o StrictHostKeyChecking=no ec2-user@13.233.139.175 'sudo /opt/tomcat/bin/shutdown.sh'"
 
