@@ -1,66 +1,94 @@
-node {
-   echo "git branch name: ${env.JOB_NAME}"
-   echo "build number is: ${env.BUILD_NUMBER}"
-   echo "node name is: ${env.NODE_NAME}"
-    
-	def mavenhome=tool name : "maven"
-	try{
+pipeline {
+    agent any 
+    tools {
+        maven "maven"
+    }
 
-	
-	stage('git clone'){
-	notifyBuild('STARTED')
-  git branch: 'feature1', credentialsId: '4fed7abf-d02c-4ae8-92c2-1f56430fb590', url: 'https://github.com/NARRESHKARRI-DEVOPS/MAVEN--WAR-FILE.git'
-	}
-	stage('maven'){
-	sh "${mavenhome}/bin/mvn clean package"
-	}
-	stage('sonar'){
-	sh "${mavenhome}/bin/mvn clean package sonar:sonar"
-	}
-	stage('nexus'){
-	sh "${mavenhome}/bin/mvn clean deploy sonar:sonar"
-	}
-	stage('tomcat'){
-	sh """
-       curl -u admin:hello  \
-	--upload-file /var/lib/jenkins/workspace/pipe-line1/target/maven-web-application.war \
-     "http://13.233.139.175:8082/manager/text/deploy?path=/maven-web-application&update=true"
-    """
+    stages {
+        stage('Checkout Stage') { 
+            steps {
+            notifyBuild('STARTED')
+                git branch: 'feature1', credentialsId: '4fed7abf-d02c-4ae8-92c2-1f56430fb590', url: 'https://github.com/NARRESHKARRI-DEVOPS/MAVEN--WAR-FILE.git'
+            }
+        }
+        
+        stage('Build') { 
+            steps {
+                sh "mvn clean package"
+            }
+        }
+        
+        stage('SQREPORT') {
+            steps {
+                sh "mvn sonar:sonar"
+            }
+        }
+        
+        stage('Deploy to Nexus') {
+            steps {
+                sh "mvn deploy"
+            }
+        }
 
-	}
-} catch (e) {
-    // If there was an exception thrown, the build failed
-    currentBuild.result = "FAILED"
-    throw e
-  } finally {
-    // Success or failure, always send notifications
-    notifyBuild(currentBuild.result)
-  }
+        stage('Deploy to Tomcat') {
+            steps {
+                script {
+                    sshagent(['plugin']) {
+                        // Stop Tomcat service gracefully
+                        sh "ssh -o StrictHostKeyChecking=no ec2-user@13.233.139.175 'sudo /opt/tomcat/bin/shutdown.sh'"
+                        
+                        // Deploy WAR file to Tomcat
+                        sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@13.233.139.175:/opt/tomcat/webapps/"
+
+                        // Permissions on the target server
+                        sh "ssh -o StrictHostKeyChecking=no ec2-user@13.233.139.175 'sudo chown -R ec2-user:ec2-user /opt/tomcat/webapps/'"
+                        sh "ssh -o StrictHostKeyChecking=no ec2-user@13.233.139.175 'sudo chmod -R 777 /opt/tomcat/webapps/'"
+                        
+                        // Start Tomcat service
+                        sh "ssh -o StrictHostKeyChecking=no ec2-user@13.233.139.175 'sudo /opt/tomcat/bin/startup.sh'"
+                    }
+                }
+            }
+        }
+    } // Stages closing
+
+    post {
+        success {
+            script {
+                notifyBuild(currentBuild.result)
+            }
+        }
+        failure {
+            script {
+                notifyBuild(currentBuild.result)
+            }
+        }
+    }
+} // Pipeline closing
+
+// ✅ Fixed Notification Function
+void notifyBuild(String buildStatus) {
+    buildStatus = buildStatus ?: 'SUCCESS'
+
+    def colorName = 'RED'
+    def colorCode = '#FF0000'
+    def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
+    def summary = "${subject} (${env.BUILD_URL})"
+
+    if (buildStatus == 'STARTED') {
+        colorName = 'YELLOW'
+        colorCode = '#FFFF00'
+    } else if (buildStatus == 'SUCCESS') {
+        colorName = 'GREEN'
+        colorCode = '#00FF00'
+
+        // List of Slack channels to notify
+    def slackChannels = ['#hello', '#veera101502', '#sla']
+
+    // Send notifications to all channels
+    for (channel in slackChannels) {
+        slackSend(color: colorCode, message: summary, channel: channel)
+    }
+}       
+
 }
-
-def notifyBuild(String buildStatus = 'STARTED') {
-  // build status of null means successful
-  buildStatus =  buildStatus ?: 'SUCCESS'
-
-  // Default values
-  def colorName = 'RED'
-  def colorCode = '#FF0000'
-  def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
-  def summary = "${subject} (${env.BUILD_URL})"
-
-  // Override default values based on build status
-  if (buildStatus == 'STARTED') {
-    color = 'YELLOW'
-    colorCode = '#FFFF00'
-  } else if (buildStatus == 'SUCCESS') {
-    color = 'GREEN'
-    colorCode = '#00FF00'
-  } else {
-    color = 'RED'
-    colorCode = '#FF0000'
-  }
-
-  // Send notifications
-  slackSend (color: colorCode, message: summary)
-}
-
