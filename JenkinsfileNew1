@@ -2,7 +2,7 @@ pipeline {
     agent any 
 tools
 {
-  maven "maven"
+  maven "maven3.9.9"
 }
 
     stages {
@@ -27,19 +27,24 @@ tools
           sh "mvn deploy"
           }
         }
-        stage('DeployAppToTomcat'){
-           steps{
-
-		echo "Deploying WAR file using curl..."
-
-        sh """
-            curl -u admin:hello \
-            --upload-file /var/lib/jenkins/workspace/project-555/target/maven-web-application.war \
-            "http://13.233.139.175:8082/manager/text/deploy?path=/maven-web-application&update=true"
-        """
-         
-          }
-        }
+      stage('Deploy to Tomcat') {
+                 sshagent(['plugin']) {
+                    // Stop Tomcat service gracefully
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ec2-user@13.233.139.175 'sudo /opt/tomcat/bin/shutdown.sh'
+                    """
+                    
+                    // Deploy WAR file to Tomcat
+                    sh """
+                        scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@13.233.139.175:/opt/tomcat/webapps/
+                    """
+                    
+                    // Start Tomcat service
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ec2-user@13.233.139.175 'sudo /opt/tomcat/bin/startup.sh'
+                    """
+                }
+            }
     } //stages closing
 
 post {
@@ -76,6 +81,5 @@ def notifyBuild(String buildStatus = 'STARTED') {
   }
 
   // Send notifications
-  slackSend (color: colorCode, message: summary, channel: '#airtel-dev')
+  slackSend (color: colorCode, message: summary, channel: '#sla')
 }
-
