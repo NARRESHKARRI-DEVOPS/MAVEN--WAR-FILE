@@ -83,7 +83,7 @@ void notifyBuild(String buildStatus) {
         colorCode = '#00FF00'
 
         // List of Slack channels to notify
-    def slackChannels = ['#hello', '#', '#sla']
+    def slackChannels = ['#hello','#sla']
 
     // Send notifications to all channels
     for (channel in slackChannels) {
