@@ -35,13 +35,13 @@ pipeline {
                 script {
                     sshagent(['plugin']) {
                         // Stop Tomcat service gracefully
-                        sh "ssh -o StrictHostKeyChecking=no ec2-user@13.232.68.239 'sudo /opt/tomcat/bin/shutdown.sh'"
+                        sh "ssh -o StrictHostKeyChecking=no ec2-user@13.233.139.175 'sudo /opt/tomcat/bin/shutdown.sh'"
 
                         // Deploy WAR file to Tomcat
-                        sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@13.232.68.239:/opt/tomcat/webapps/"
+                        sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@13.233.139.175:/opt/tomcat/webapps/"
 
                         // Start Tomcat service
-                        sh "ssh -o StrictHostKeyChecking=no ec2-user@13.232.68.239 'sudo /opt/tomcat/bin/startup.sh'"
+                        sh "ssh -o StrictHostKeyChecking=no ec2-user@13.233.139.175 'sudo /opt/tomcat/bin/startup.sh'"
                     }
                 }
             }
