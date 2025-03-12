@@ -42,7 +42,7 @@ pipeline {
 
                         // Permissions on the target server
                         sh "ssh -o StrictHostKeyChecking=no ec2-user@13.233.139.175 'sudo chown -R ec2-user:ec2-user /opt/tomcat/webapps/'"
-                        sh "ssh -o StrictHostKeyChecking=no ec2-user@13.233.139.175 'sudo chmod -R 777 /opt/tomcat/webapps/'
+                        sh "ssh -o StrictHostKeyChecking=no ec2-user@13.233.139.175 'sudo chmod -R 777 /opt/tomcat/webapps/'"
                         
                         // Start Tomcat service
                         sh "ssh -o StrictHostKeyChecking=no ec2-user@13.233.139.175 'sudo /opt/tomcat/bin/startup.sh'"
