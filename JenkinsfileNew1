@@ -34,7 +34,7 @@ tools
 
         sh """
             curl -u admin:hello \
-            --upload-file /var/lib/jenkins/workspace/jio-scripted-way-pipeline-develoment/target/maven-web-application.war \
+            --upload-file /var/lib/jenkins/workspace/project-555/target/maven-web-application.war \
             "http://13.233.139.175:8082/manager/text/deploy?path=/maven-web-application&update=true"
         """
          
