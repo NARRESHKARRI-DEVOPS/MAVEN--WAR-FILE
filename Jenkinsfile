@@ -3,7 +3,7 @@ node{
    def mavenhome=tool name: "maven"
 	stage('git-clone')
 	{
-	git branch: 'staging', credentialsId: '9298ec1d-565d-4a96-b33e-a627d60eedd6', url: 'https://github.com/NARRESHKARRI-DEVOPS/MAVEN--WAR-FILE.git'
+	 git branch: 'feature1', credentialsId: '4fed7abf-d02c-4ae8-92c2-1f56430fb590', url: 'https://github.com/NARRESHKARRI-DEVOPS/MAVEN--WAR-FILE.git'
 	}
 	stage('maven')
 	{
@@ -21,8 +21,8 @@ node{
 	{
 	sh """
 	curl -u admin:hello \
-	--upload-file /var/lib/jenkins/workspace/new-pipe-1/target/maven-web-application.war \
-	"http://13.234.111.52:8080/manager/text/deploy?path=/maven-web-apllication&update=ture"
+	--upload-file /var/lib/jenkins/workspace/multiwithscripting/target/maven-web-application.war \
+	"http://13.233.139.175:8082/manager/text/deploy?path=/maven-web-apllication&update=ture"
 	"""
 	}
 }
