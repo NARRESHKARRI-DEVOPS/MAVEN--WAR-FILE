@@ -34,7 +34,7 @@ tools
 
         sh """
             curl -u kkfunda:kkfunda \
-            --upload-file /var/lib/jenkins/workspace/narresh/target/maven-web-application.war \
+            --upload-file /var/lib/jenkins/workspace/release/target/maven-web-application.war \
             "http://13.233.139.175:8082/manager/text/deploy?path=/maven-web-application&update=true"
         """
          
