@@ -41,9 +41,9 @@ pipeline {
                 }
 
                 sh """
-                    curl -u kkfunda:kkfunda \
+                    curl -u admin:hello \
                         --upload-file ${warFile} \
-                        "http://3.108.194.157:8080/manager/text/deploy?path=/maven-web-application&update=true"
+                        "http://13.233.139.175:8082/manager/text/deploy?path=/maven-web-application&update=true"
                 """
             }
         }
