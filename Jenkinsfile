@@ -7,7 +7,6 @@ pipeline {
     stages {
         stage('Checkout Stage') { 
             steps {
-            notifyBuild('STARTED')
                 git branch: 'feature1', credentialsId: '4fed7abf-d02c-4ae8-92c2-1f56430fb590', url: 'https://github.com/NARRESHKARRI-DEVOPS/MAVEN--WAR-FILE.git'
             }
         }
@@ -53,6 +52,11 @@ pipeline {
     } // Stages closing
 
     post {
+        always {
+            script {
+                notifyBuild('STARTED')  // 🔹 Sends notification at the beginning
+            }
+        }
         success {
             script {
                 notifyBuild(currentBuild.result)
@@ -81,14 +85,14 @@ void notifyBuild(String buildStatus) {
     } else if (buildStatus == 'SUCCESS') {
         colorName = 'GREEN'
         colorCode = '#00FF00'
+    }
 
-        // List of Slack channels to notify
+    // List of Slack channels to notify
     def slackChannels = ['#hello', '#veera101502', '#sla']
 
     // Send notifications to all channels
     for (channel in slackChannels) {
         slackSend(color: colorCode, message: summary, channel: channel)
     }
-}       
-
 }
+
