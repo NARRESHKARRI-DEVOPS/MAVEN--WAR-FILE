@@ -8,7 +8,7 @@ pipeline {
         stage('Checkout Stage') { 
             steps {
                 notifyBuild('STARTED')
-                git branch: 'prod', credentialsId: '4fed7abf-d02c-4ae8-92c2-1f56430fb590', url: 'https://github.com/NARRESHKARRI-DEVOPS/MAVEN--WAR-FILE.git'
+                git branch: 'feature1', credentialsId: '4fed7abf-d02c-4ae8-92c2-1f56430fb590', url: 'https://github.com/NARRESHKARRI-DEVOPS/MAVEN--WAR-FILE.git'
             }
         }
         
@@ -33,9 +33,9 @@ pipeline {
         stage('Deploy to EC2') {
             steps {
                 sshagent(['ssh-key']) {
-                    sh "ssh ec2-user@52.66.44.58 'sudo systemctl stop tomcat'"
+                    sh "ssh ec2-user@52.66.44.58 'sudo /opt/tomcat/bin/shutdown.sh'"
                     sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@52.66.44.58:/opt/tomcat/webapps/"
-                    sh "ssh ec2-user@52.66.44.58 'sudo systemctl start tomcat'"
+                    sh "ssh ec2-user@52.66.44.58 'sudo /opt/tomcat/bin/startup.sh'"
                 }
             }
         }
@@ -80,3 +80,4 @@ void notifyBuild(String buildStatus) {
         slackSend(color: colorCode, message: summary, channel: channel)
     }
 }
+
