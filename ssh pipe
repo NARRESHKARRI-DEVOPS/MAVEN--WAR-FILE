@@ -1,0 +1,80 @@
+pipeline {
+    agent any 
+    tools {
+        maven "maven"
+    }
+
+    stages {
+        stage('Checkout Stage') { 
+            steps {
+                notifyBuild('STARTED')
+                git branch: 'prod', credentialsId: '4fed7abf-d02c-4ae8-92c2-1f56430fb590', url: 'https://github.com/NARRESHKARRI-DEVOPS/MAVEN--WAR-FILE.git'
+            }
+        }
+        
+        stage('Build') { 
+            steps {
+                sh "mvn clean package"
+            }
+        }
+        
+        stage('SQREPORT') {
+            steps {
+                sh "mvn sonar:sonar"
+            }
+        }
+        
+        stage('Deploy to Nexus') {
+            steps {
+                sh "mvn deploy"
+            }
+        }
+        
+        stage('Deploy to EC2') {
+            steps {
+                sshagent(['ssh-key']) {
+                    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@52.66.44.58:/opt/tomcat/webapps/"
+                }
+            }
+        }
+    } // Stages closing
+
+    post {
+        success {
+            script {
+                notifyBuild(currentBuild.result)
+            }
+        }
+        failure {
+            script {
+                notifyBuild(currentBuild.result)
+            }
+        }
+    }
+} // Pipeline closing
+
+// Notification Function
+void notifyBuild(String buildStatus) {
+    buildStatus = buildStatus ?: 'SUCCESS'
+
+    def colorName = 'RED'
+    def colorCode = '#FF0000'
+    def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
+    def summary = "${subject} (${env.BUILD_URL})"
+
+    if (buildStatus == 'STARTED') {
+        colorName = 'YELLOW'
+        colorCode = '#FFFF00'
+    } else if (buildStatus == 'SUCCESS') {
+        colorName = 'GREEN'
+        colorCode = '#00FF00'
+    }
+
+    // List of Slack channels to notify
+    def slackChannels = ['hello', '#sla']
+
+    // Send notifications to all channels
+    for (channel in slackChannels) {
+        slackSend(color: colorCode, message: summary, channel: channel)
+    }
+}

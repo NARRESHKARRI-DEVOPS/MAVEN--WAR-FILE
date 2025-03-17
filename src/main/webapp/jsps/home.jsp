@@ -4,13 +4,13 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>KK FUNDA Home Page</title>
+<title>NARRESH Home Page</title>
 <link href="images/kkfunda.jpg" rel="icon">
 </head>
 </head>
 <body>
-<h1 align="center">Welcome to KK FUNDA</h1>
-<h1 align="center"> KK FUNDA</h1>
+<h1 align="center">finally</h1>
+<h1 align="center"> final</h1>
 <hr>
 <br>
 	<h1><h3> Server Side IP Address </h3><br>

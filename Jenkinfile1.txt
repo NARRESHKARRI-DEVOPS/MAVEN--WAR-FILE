@@ -1,0 +1,64 @@
+node {
+   echo "git branch name: ${env.JOB_NAME}"
+   echo "build number is: ${env.BUILD_NUMBER}"
+   echo "node name is: ${env.NODE_NAME}"
+    
+   def mavenhome = tool "maven"  // Fix tool definition
+
+   try {
+       stage('git clone') {
+           notifyBuild('STARTED')
+           git branch: 'feature1', credentialsId: '4fed7abf-d02c-4ae8-92c2-1f56430fb590', url: 'https://github.com/NARRESHKARRI-DEVOPS/MAVEN--WAR-FILE.git'
+       }
+
+       stage('maven') {
+           sh "${mavenhome}/bin/mvn clean package"
+       }
+
+       stage('sonar') {
+           sh "${mavenhome}/bin/mvn sonar:sonar"
+       }
+
+       stage('nexus') {
+           sh "${mavenhome}/bin/mvn deploy"
+       }
+
+       stage('tomcat') {
+           def warFile = "${env.WORKSPACE}/target/maven-web-application.war"
+           
+           if (!fileExists(warFile)) {
+               error "WAR file not found at ${warFile}"
+           }
+
+           sh """
+           curl -u admin:hello  \
+               --upload-file ${warFile} \
+               "http://13.233.139.175:8082/manager/text/deploy?path=/maven-web-application&update=true"
+           """
+       }
+   } catch (e) {
+       currentBuild.result = "FAILED"
+       throw e
+   } finally {
+       notifyBuild(currentBuild.result)
+   }
+}
+
+def notifyBuild(String buildStatus = 'STARTED') {
+    buildStatus = buildStatus ?: 'SUCCESS'
+
+    def colorName = 'RED'
+    def colorCode = '#FF0000'
+    def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
+    def summary = "${subject} (${env.BUILD_URL})"
+
+    if (buildStatus == 'STARTED') {
+        colorName = 'YELLOW'
+        colorCode = '#FFFF00'
+    } else if (buildStatus == 'SUCCESS') {
+        colorName = 'GREEN'
+        colorCode = '#00FF00'
+    }
+
+    slackSend (color: colorCode, message: summary)
+}
